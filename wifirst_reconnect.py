@@ -96,3 +96,18 @@ print payload
 print url
 r = requests.post(url, data=payload, cookies=cookies)
 print r.url, r.headers['status']
+
+success = True
+from subprocess import call
+return_code = call("ping -q -w 1 -c 1 google.com", shell=True)
+if return_code == 0:
+    message = "Success."
+else:
+    message = "Failed. Ping return code: {}".format(return_code)
+
+import datetime
+import pytz
+time = datetime.datetime.now(
+    pytz.timezone('Europe/Paris')).strftime('%d/%m/%Y:%H:%M:%S %z')
+with open("reconnections.log", "a") as myfile:
+    myfile.write("[{}] {}\n".format(time, message))
