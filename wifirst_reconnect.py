@@ -4,6 +4,7 @@
 # <codecell>
 
 import requests
+import pprint
 from HTMLParser import HTMLParser
 
 
@@ -45,56 +46,36 @@ with open('password.txt') as f:
     password = f.readline().split()[0]
 
 url = 'https://selfcare.wifirst.net/sessions/new'
-user_agent = "Mozilla/5.0"
-r = requests.get(url)
-r.headers['User-Agent'] = user_agent
+s = requests.Session()
+r = s.get(url)
+
 print "#### request 1: get"
-print r.status_code
-cookies = r.cookies
-print "Cookie: ", cookies
+print r.url, r.status_code, len(r.content)
 payload, url = scrap_form(r.content)
+payload.update({
+    'remember_me': '1',
+    'login': login,
+    'password': password,
+    'commit': 'Se connecter'
+})
 
-payload['remember_me'] = '1'
-payload['login'] = login
-payload['password'] = password
-payload['commit'] = 'Se connecter'
-
-h = {
-    'Content-Length': len(unicode(payload)),
-    'User-Agent': user_agent,
-    # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    # 'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-    # 'Accept-Encoding': 'gzip,deflate,sdch',
-    # 'Accept-Language': 'fr-FR,fr;q=0.8,en-US;q=0.6,en;q=0.4',
-    # 'Cache-Control': 'max-age=0',
-    # 'Connection': 'keep-alive',
-    # 'Content-Type': 'application/x-www-form-urlencoded',
-    # 'Host': 'selfcare.wifirst.net',
-    'Origin': 'https://selfcare.wifirst.net',
-    # 'Referer': 'https://selfcare.wifirst.net/sessions',
-}
-
-print "#### request 2: post login pwd"
-# print url, h, payload, "length: ", len(unicode(payload))
-r = requests.post('https://selfcare.wifirst.net/sessions',
-                  headers=h, data=payload, cookies=cookies)
+print "\n#### request 2: post login pwd"
+r = s.post('https://selfcare.wifirst.net/sessions', data=payload)
 print r.url, r.status_code, len(r.content)
 # print "\nresponse: headers: ", r.headers
-cookies = r.cookies
-print "Cookie: ", cookies
 if len(r.content) < 200:
     print ' * content: ', r.content
 
-print "#### request 3: get perform"
-r = requests.get('https://connect.wifirst.net/?perform=true', cookies=cookies)
+print "\n#### request 3: get perform"
+r = s.get('https://connect.wifirst.net/?perform=true')
 print r.url, r.headers['status']
 payload, url = scrap_form(r.content)
 payload['remember_me'] = '1'
 
-print "#### request 4: final post to connect"
-print payload
+print "\n#### request 4: final post to connect"
+# pprint.pprint(payload)
 print url
-r = requests.post(url, data=payload, cookies=cookies)
+r = s.post(url, data=payload)
 print r.url, r.headers['status']
 
 success = True
