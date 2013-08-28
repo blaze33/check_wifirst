@@ -33,7 +33,7 @@ def scrap_form(content):  # instantiate the parser and fed it some HTML
 
     for input in parser.inputs:
         if input['type'] != 'submit':
-            payload[input['name']] = input['value']
+            payload[input['name']] = input.get('value')
     if hasattr(parser, 'form'):
         for x, y in parser.form:
             if x == 'action':
